@@ -31,6 +31,11 @@ defmodule Naive.Trader do
 
     Logger.info("Initalizing new trader for #{symbol}")
 
+    Phoenix.PubSub.subscribe(
+      Streamer.PubSub,
+      "TRADE_EVENTS:#{symbol}"
+    )
+
     {:ok,
      %State{
        symbol: symbol,
@@ -40,7 +45,7 @@ defmodule Naive.Trader do
   end
 
   @impl true
-  def handle_cast(
+  def handle_info(
         %TradeEvent{price: price},
         %State{symbol: symbol, buy_order: nil} = state
       ) do
@@ -55,7 +60,7 @@ defmodule Naive.Trader do
   end
 
   @impl true
-  def handle_cast(
+  def handle_info(
         %TradeEvent{
           buyer_order_id: order_id,
           quantity: quantity
@@ -85,7 +90,7 @@ defmodule Naive.Trader do
   end
 
   @impl true
-  def handle_cast(
+  def handle_info(
         %TradeEvent{
           seller_order_id: order_id,
           quantity: quantity
@@ -102,7 +107,7 @@ defmodule Naive.Trader do
   end
 
   @impl true
-  def handle_cast(%TradeEvent{}, state) do
+  def handle_info(%TradeEvent{}, state) do
     {:noreply, state}
   end
 
@@ -110,7 +115,7 @@ defmodule Naive.Trader do
     Binance.get_exchange_info()
     |> elem(1)
     |> Map.get(:symbols)
-    |> Enum.find(&(&1["symbols"] == symbol))
+    |> Enum.find(&(&1["symbol"] == symbol))
     |> Map.get("filters")
     |> Enum.find(&(&1["filterType"] == "PRICE_FILTER"))
     |> Map.get("tickSize")
