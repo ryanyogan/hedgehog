@@ -24,3 +24,5 @@ erl_crash.dump
 /tmp
 
 .elixir_ls/
+
+.vscode/
